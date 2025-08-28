@@ -41,7 +41,7 @@ def add_item():
     item = Item.query.get(barcode)
     if item:
         item.num_packs += add_packs
-        item.quantity = item.num_packs * item.pack_quantity
+        item.quantity += add_packs * item.pack_quantity
         if shelf:
             item.shelf = shelf
         db.session.commit()
