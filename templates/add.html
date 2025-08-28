@@ -15,6 +15,7 @@
 <body>
   <h1>Artikel hinzufügen</h1>
 
+  <div id="reader"></div>
   <form id="addForm">
     <div class="mb-3">
       <label for="barcode" class="form-label">Barcode</label>
@@ -31,11 +32,7 @@
     <button type="submit" class="btn btn-success me-2"> Hinzufügen</button>
     <a href="/items" class="btn btn-primary">Zur Lagerliste</a>
   </form>
-
-  <div class="response" id="response"></div>
-
-  <!-- Kamera für Barcode-Scan -->
-  <div id="reader"></div>
+<div class="response" id="response"></div>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
     const form = document.getElementById("addForm");
