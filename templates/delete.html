@@ -15,10 +15,6 @@
 <body>
   <h1>Artikel löschen</h1>
 
-  <div class="top-buttons">
-    <a href="/items" class="btn btn-primary">Zur Bestandsliste</a>
-  </div>
-
   <form id="deleteForm">
     <div class="mb-3">
       <label for="barcode" class="form-label">Barcode</label>
@@ -33,6 +29,7 @@
       <input type="number" class="form-control" id="quantity" min="0" placeholder="z. B. 500">
     </div>
     <button type="submit" class="btn btn-danger">Löschen</button>
+    <a href="/items" class="btn btn-primary">Zur Lagerliste</a>
   </form>
 
   <div class="response" id="response"></div>
