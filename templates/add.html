@@ -15,6 +15,10 @@
 <body>
   <h1>Artikel hinzufügen</h1>
 
+  <div class="top-buttons">
+    <a href="/items" class="btn btn-primary">Zur Bestandsliste</a>
+  </div>
+
   <form id="addForm">
     <div class="mb-3">
       <label for="barcode" class="form-label">Barcode</label>
@@ -28,7 +32,7 @@
       <label for="shelf" class="form-label">Fach / Regal</label>
       <input type="text" class="form-control" id="shelf">
     </div>
-    <button type="submit" class="btn btn-primary">Hinzufügen</button>
+    <button type="submit" class="btn btn-success me-2"> Hinzufügen</button>
   </form>
 
   <div class="response" id="response"></div>
