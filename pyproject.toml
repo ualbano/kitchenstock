@@ -1,7 +1,7 @@
 [project]
 name = "kitchen-stock"
 version = "0.1.0"
-description = "Add your description here"
+description = " Storagesystem for my kitchen pantry "
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
