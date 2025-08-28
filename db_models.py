@@ -15,4 +15,5 @@ class Item(db.Model):
     unit = db.Column(db.String(10), nullable=True)
     num_packs = db.Column(db.Integer, nullable=False)
     keywords = db.Column(db.Text, nullable=True)
+    min_quantity = db.Column(db.Float, nullable=True)
     shelf = db.Column(db.String(50), nullable=True)

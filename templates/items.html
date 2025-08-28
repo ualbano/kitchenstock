@@ -34,6 +34,7 @@
         <th>Packungsgröße</th>
         <th>Anzahl Packungen</th>
         <th>Barcode</th>
+	<th>Mindestbestand</th>
       </tr>
     </thead>
     <tbody>
@@ -46,7 +47,8 @@
         <td>{{ item.pack_quantity }} {{ item.unit }}</td>
         <td>{{ item.num_packs }}</td>
 	<td>{{ item.id or '' }}</td>
-      </tr>
+    	<td>{% if item.min_quantity %}{{ item.min_quantity }} {{ item.unit }}{% endif %}</td>
+	</tr>
       {% endfor %}
     </tbody>
   </table>

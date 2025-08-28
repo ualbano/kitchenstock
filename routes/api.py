@@ -34,7 +34,7 @@ def add_item():
     barcode = data.get("id")
     add_packs = int(data.get("quantity", 1))
     shelf = data.get("shelf", None)
-
+    min_quantity = request.form.get("min_quantity")
     if not barcode:
         return jsonify({"success": False, "error": "Barcode required"}), 400
 
@@ -44,6 +44,8 @@ def add_item():
         item.quantity += add_packs * item.pack_quantity
         if shelf:
             item.shelf = shelf
+        if min_quantity:
+            item.min_quantity = float(min_quantity)
         db.session.commit()
         return jsonify(
             {
@@ -89,6 +91,7 @@ def add_item():
         num_packs=add_packs,
         keywords=keywords,
         shelf=shelf,
+        min_quantity=float(min_quantity) if min_quantity else None,
     )
     db.session.add(item)
     db.session.commit()

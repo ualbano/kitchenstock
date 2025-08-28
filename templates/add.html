@@ -32,6 +32,10 @@
       <label for="shelf" class="form-label">Fach / Regal</label>
       <input type="text" class="form-control" id="shelf">
     </div>
+    <div class="mb-3">
+      <label for="min_quantity" class="form-label">Mindestmenge (optional)</label>
+      <input type="number" step="0.01" class="form-control" id="min_quantity" name="min_quantity">
+    </div>
     <button type="submit" class="btn btn-success me-2"> Hinzufügen</button>
   </form>
 
@@ -50,6 +54,7 @@
         id: document.getElementById("barcode").value,
         quantity: document.getElementById("quantity").value,
         shelf: document.getElementById("shelf").value
+	min_quantity: document.getElementById("min_quantity").value || null
       };
       try {
         const res = await fetch("/add", {
