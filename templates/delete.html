@@ -3,60 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Artikel entnehmen</title>
+  <title>Artikel löschen</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
   <style>
-    body { padding: 1.5rem; }
-    #reader { width: 100%; max-width: 400px; margin: 1rem auto; }
-    .form-container { max-width: 500px; margin: auto; }
+    body { padding: 2rem; }
+    .response { margin-top: 1rem; }
+    #reader { width: 100%; max-width: 400px; margin-top: 1rem; }
   </style>
 </head>
 <body>
-  <h1 class="h4 text-center">Artikel entnehmen</h1>
+  <h1>Artikel löschen</h1>
 
-  <div id="reader"></div>
-
-  <div class="form-container">
-    <form method="post" action="/delete">
-      <div class="mb-3">
-        <label for="barcode" class="form-label">Barcode</label>
-        <input type="text" id="barcode" name="barcode" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="num_packs" class="form-label">Anzahl Packungen (optional)</label>
-        <input type="number" id="num_packs" name="num_packs" class="form-control">
-      </div>
-      <div class="mb-3">
-        <label for="quantity" class="form-label">Menge in g/l (optional)</label>
-        <input type="number" id="quantity" name="quantity" class="form-control">
-      </div>
-      <button type="submit" class="btn btn-danger">Entfernen</button>
-      <a href="/items" class="btn btn-secondary">Zurück zum Lager</a>
-    </form>
+  <div class="top-buttons">
+    <a href="/items" class="btn btn-primary">Zur Bestandsliste</a>
   </div>
 
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <form id="deleteForm">
+    <div class="mb-3">
+      <label for="barcode" class="form-label">Barcode</label>
+      <input type="text" class="form-control" id="barcode" required>
+    </div>
+    <div class="mb-3">
+      <label for="packs" class="form-label">Anzahl Packungen (optional)</label>
+      <input type="number" class="form-control" id="packs" min="1" placeholder="z. B. 2">
+    </div>
+    <div class="mb-3">
+      <label for="quantity" class="form-label">Menge (optional, in g oder ml)</label>
+      <input type="number" class="form-control" id="quantity" min="0" placeholder="z. B. 500">
+    </div>
+    <button type="submit" class="btn btn-danger">Löschen</button>
+  </form>
+
+  <div class="response" id="response"></div>
+
+  <!-- Kamera für Barcode -->
+  <div id="reader"></div>
+
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const html5QrCode = new Html5Qrcode("reader");
+    const form = document.getElementById("deleteForm");
+    const responseDiv = document.getElementById("response");
 
-      function onScanSuccess(decodedText) {
-        document.getElementById("barcode").value = decodedText;
-        console.log("Barcode erkannt: " + decodedText);
-      }
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      function onScanFailure(error) { }
+      const data = {
+        id: document.getElementById("barcode").value,
+        packs: document.getElementById("packs").value || null,
+        quantity: document.getElementById("quantity").value || null
+      };
 
-      Html5Qrcode.getCameras()
-        .then(cameras => {
-          if (cameras && cameras.length) {
-            html5QrCode.start(cameras[0].id, { fps: 10, qrbox: 250 }, onScanSuccess, onScanFailure);
+      try {
+        const res = await fetch("/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          if (result.deleted) {
+            responseDiv.innerHTML = `<div class="alert alert-success">Artikel wurde komplett gelöscht.</div>`;
           } else {
-            console.error("Keine Kamera gefunden");
+            responseDiv.innerHTML = `
+              <div class="alert alert-success">
+                Artikel <strong>${result.name}</strong> aktualisiert.<br>
+                Gesamtmenge: ${result.quantity} ${result.unit}, Packungsgröße: ${result.pack_quantity} ${result.unit}, Anzahl Packungen: ${result.num_packs}, Fach: ${result.shelf || ''}
+              </div>
+            `;
           }
-        })
-        .catch(err => console.error("Kamera-Fehler:", err));
+          form.reset();
+        } else {
+          responseDiv.innerHTML = `<div class="alert alert-danger">Fehler: ${result.error}</div>`;
+        }
+
+      } catch (err) {
+        responseDiv.innerHTML = `<div class="alert alert-danger">Fehler beim Senden: ${err}</div>`;
+      }
     });
+
+    // Barcode Scanner initialisieren
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById("barcode").value = decodedText;
+      html5QrcodeScanner.clear();
+    }
+
+    const html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      onScanSuccess
+    ).catch(err => console.log(err));
   </script>
 </body>
 </html>
+
