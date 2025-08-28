@@ -7,10 +7,10 @@ views_bp = Blueprint("views", __name__)
 # --------------------------
 # Inventory Table View
 # --------------------------
-@views_bp.route("/view")
+@views_bp.route("/items")
 def view_items():
     items = Item.query.all()
-    return render_template("view.html", items=items)
+    return render_template("items.html", items=items)
 
 
 # --------------------------

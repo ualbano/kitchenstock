@@ -33,7 +33,7 @@ Thru a barcode scanner (my phone), I can easily add items to my inventory by sca
 uv run app.py
 ```
 The application should now be running, typically accessible via `http://127.0.0.1:5000` in your web browser.
-You can start with this view 'http://127.0.0.1/:5000/items' to see all items in your inventory:
+You can start with this view 'http://127.0.0.1:5000/items' to see all items in your inventory:
 
 ![Inventory View](./img/item_view.png)
 
