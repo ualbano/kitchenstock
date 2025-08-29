@@ -1,24 +1,26 @@
-
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Artikel hinzufügen</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { padding: 1rem; }
     .card { max-width: 500px; margin: auto; }
-    /* Scanner fix */
     #reader {
       width: 100%;
-      height: 160px;    /* kleinere Höhe */
-      margin-bottom: 1rem;
+      aspect-ratio: 4/3;
       border: 1px solid #ccc;
       border-radius: .5rem;
       overflow: hidden;
+      margin-bottom: 1rem;
     }
-    video { border-radius: .5rem; }
+    video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover;
+    }
     .toast-container {
       position: fixed;
       bottom: 1rem;
@@ -68,7 +70,7 @@
     const form = document.getElementById("addForm");
     const toastContainer = document.getElementById("toast-container");
 
-    function showToast(message, type = "success") {
+    function showToast(message, type="success") {
       const toastEl = document.createElement("div");
       toastEl.className = `toast text-bg-${type} border-0`;
       toastEl.role = "alert";
@@ -99,7 +101,7 @@
         });
         const result = await res.json();
         if (result.success) {
-          showToast(`✅ ${result.name} hinzugefügt`, "success");
+          showToast(`✅ ${result.name} hinzugefügt`);
           form.reset();
         } else {
           showToast(`⚠️ Fehler: ${result.error}`, "danger");
@@ -117,7 +119,7 @@
     const html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: 160 },
+      { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 4/3 },
       onScanSuccess
     ).catch(err => console.log(err));
   </script>
