@@ -24,6 +24,11 @@
     }
     .btn { transition: all 0.2s; }
     .toast-container { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 1055; }
+    #scanHistory { max-height: 200px; overflow-y: auto; text-align: left; margin-top: 1rem; }
+    .history-entry { display: flex; align-items: center; padding: 0.25rem 0.5rem; border-radius: .25rem; margin-bottom: 0.25rem; }
+    .history-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.5rem; }
+    .history-add { background-color: #198754; color: white; } /* grün für Einlagern */
+    .history-delete { background-color: #dc3545; color: white; } /* rot für Auslagern */
   </style>
 </head>
 <body>
@@ -43,6 +48,10 @@
     <!-- Kamera -->
     <div id="reader"></div>
 
+    <!-- Live-Historie der letzten Scans -->
+    <h6>Letzte Scans</h6>
+    <div id="scanHistory"></div>
+
     <!-- Button zur Lagerliste -->
     <a href="/items" class="btn btn-primary w-100 mt-2">Zur Bestandsliste</a>
   </div>
@@ -52,6 +61,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const toastContainer = document.getElementById("toast-container");
+    const scanHistoryEl = document.getElementById("scanHistory");
+    let lastScans = [];
 
     function showToast(message, type="success") {
       const toastEl = document.createElement("div");
@@ -85,12 +96,35 @@
       .then(res => res.json())
       .then(result => {
         if (result.success) {
-          showToast(direction === "add" ? `✅ ${result.name} eingelagert` : `⚠️ ${result.name} ausgelagert`);
+          const toastType = direction === "add" ? "success" : "danger";
+          showToast(direction === "add" ? `✅ ${result.name} eingelagert` : `⚠ ${result.name} ausgelagert`, toastType);
+
+          // Live-Historie aktualisieren
+          const entry = {
+            timestamp: new Date().toLocaleTimeString(),
+            action: direction,
+            name: result.name || "",
+            id: barcode
+          };
+          lastScans.unshift(entry);
+          if (lastScans.length > 10) lastScans.pop(); // max 10 Einträge
+
+          renderHistory();
         } else {
           showToast(`Fehler: ${result.error}`, "danger");
         }
       })
       .catch(err => showToast(`Netzwerkfehler: ${err}`, "danger"));
+    }
+
+    function renderHistory() {
+      scanHistoryEl.innerHTML = "";
+      lastScans.forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "history-entry " + (entry.action === "add" ? "history-add" : "history-delete");
+        div.innerHTML = `<span class="history-dot" style="background-color:${entry.action === "add" ? '#198754' : '#dc3545'}"></span> ${entry.timestamp} - ${entry.name || entry.id}`;
+        scanHistoryEl.appendChild(div);
+      });
     }
 
     // --- prevent multiple scans ---
@@ -116,3 +150,4 @@
   </script>
 </body>
 </html>
+
