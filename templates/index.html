@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="de">
 <head>
@@ -23,9 +22,7 @@
       box-shadow: 0 0 0 3px rgba(0,0,0,0.2);
       opacity: 1;
     }
-    .btn {
-      transition: all 0.2s;
-    }
+    .btn { transition: all 0.2s; }
     .toast-container { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 1055; }
   </style>
 </head>
@@ -96,10 +93,20 @@
       .catch(err => showToast(`Netzwerkfehler: ${err}`, "danger"));
     }
 
+    // --- prevent multiple scans ---
+    const recentScans = new Set();
+    const scanTimeout = 5000; // 5 Sekunden
+
     function onScanSuccess(decodedText) {
+      if (recentScans.has(decodedText)) return;
+      recentScans.add(decodedText);
+
       handleBarcode(decodedText);
+
+      setTimeout(() => recentScans.delete(decodedText), scanTimeout);
     }
 
+    // Kamera starten
     const html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start(
       { facingMode: "environment" },
