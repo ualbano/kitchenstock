@@ -1,133 +1,163 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Schnell Ein-/Auslagern</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <style>
-    body { padding: 1rem; text-align: center; font-family: sans-serif; }
-    .card { max-width: 500px; margin: auto; padding: 1rem; }
-    #reader {
-      width: 100%;
-      aspect-ratio: 4/3;
-      border: 1px solid #ccc;
-      border-radius: .5rem;
-      overflow: hidden;
-      margin-bottom: 1rem;
-    }
-    video { width: 100% !important; height: 100% !important; object-fit: cover; }
-    .btn-check:checked + .btn {
-      box-shadow: 0 0 0 3px rgba(0,0,0,0.2);
-      opacity: 1;
-    }
-    .btn { transition: all 0.2s; }
-    .toast-container { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 1055; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Schnell Ein-/Auslagern</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+body { padding: 1rem; text-align: center; font-family: sans-serif; }
+.card { max-width: 500px; margin: auto; padding: 1rem; }
+#scanner-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: .5rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+}
+#scanner-container canvas,
+#scanner-container video { width: 100% !important; height: 100% !important; object-fit: cover; }
+.overlay {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  border: 4px solid rgba(0,123,255,0.5);
+  pointer-events: none;
+  border-radius: .5rem;
+}
+.btn-check:checked + .btn { box-shadow: 0 0 0 3px rgba(0,0,0,0.2); opacity: 1; }
+.btn { transition: all 0.2s; }
+.toast-container { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 1055; }
+#history { text-align: left; max-height: 150px; overflow-y: auto; margin-top: .5rem; }
+#history div { border-bottom: 1px solid #eee; padding: .2rem 0; font-size: .9rem; }
+</style>
 </head>
 <body>
 
-  <h3>Schnell Ein-/Auslagern</h3>
+<h3>Schnell Ein-/Auslagern</h3>
 
-  <div class="card shadow-sm">
-    <!-- Radio Buttons -->
-    <div class="btn-group mb-3" role="group">
-      <input type="radio" class="btn-check" name="direction" id="addRadio" value="add" autocomplete="off">
-      <label class="btn btn-success" for="addRadio">Einlagern ⬆</label>
+<div class="card shadow-sm">
+  <!-- Radio Buttons -->
+  <div class="btn-group mb-3" role="group">
+    <input type="radio" class="btn-check" name="direction" id="addRadio" value="add" autocomplete="off">
+    <label class="btn btn-success" for="addRadio">Einlagern ⬆</label>
 
-      <input type="radio" class="btn-check" name="direction" id="deleteRadio" value="delete" autocomplete="off" checked>
-      <label class="btn btn-danger" for="deleteRadio">Auslagern ⬇</label>
-    </div>
-
-    <!-- Kamera -->
-    <div id="reader"></div>
-
-    <!-- Fallback manuelle Eingabe -->
-    <div class="input-group mb-3">
-      <input type="text" id="manualBarcode" class="form-control" placeholder="Barcode eingeben...">
-      <button class="btn btn-outline-primary" onclick="submitManualBarcode()">OK</button>
-    </div>
-
-    <!-- Button zur Lagerliste -->
-    <a href="/items" class="btn btn-primary w-100">Zur Bestandsliste</a>
+    <input type="radio" class="btn-check" name="direction" id="deleteRadio" value="delete" autocomplete="off" checked>
+    <label class="btn btn-danger" for="deleteRadio">Auslagern ⬇</label>
   </div>
 
-  <div class="toast-container" id="toast-container"></div>
+  <!-- Kamera + Overlay -->
+  <div id="scanner-container">
+    <div class="overlay"></div>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    const toastContainer = document.getElementById("toast-container");
+  <!-- Fallback manuelle Eingabe -->
+  <div class="input-group my-2">
+    <input type="text" id="manualBarcode" class="form-control" placeholder="Barcode eingeben...">
+    <button class="btn btn-outline-primary" onclick="submitManualBarcode()">OK</button>
+  </div>
 
-    function showToast(message, type="success") {
-      const toastEl = document.createElement("div");
-      toastEl.className = `toast text-bg-${type} border-0`;
-      toastEl.role = "alert";
-      toastEl.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">${message}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      `;
-      toastContainer.appendChild(toastEl);
-      const toast = new bootstrap.Toast(toastEl, { delay: 2000 });
-      toast.show();
-      toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+  <!-- Live History -->
+  <div id="history"></div>
+
+  <!-- Button zur Lagerliste -->
+  <a href="/items" class="btn btn-primary w-100 mt-2">Zur Bestandsliste</a>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const toastContainer = document.getElementById("toast-container");
+const historyDiv = document.getElementById("history");
+function showToast(message, type="success") {
+  const toastEl = document.createElement("div");
+  toastEl.className = `toast text-bg-${type} border-0`;
+  toastEl.role = "alert";
+  toastEl.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${message}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>`;
+  toastContainer.appendChild(toastEl);
+  const toast = new bootstrap.Toast(toastEl, { delay: 2000 });
+  toast.show();
+  toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+}
+
+function getDirection() { return document.querySelector('input[name="direction"]:checked').value; }
+
+function handleBarcode(barcode) {
+  const direction = getDirection();
+  const data = { id: barcode, quantity: 1 };
+
+  fetch(`/${direction}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) {
+      showToast(direction === "add" ? `✅ ${result.name} eingelagert` : `⚠ ${result.name} ausgelagert`);
+      addToHistory(barcode, result.name, direction);
+    } else {
+      showToast(`Fehler: ${result.error}`, "danger");
     }
+  })
+  .catch(err => showToast(`Netzwerkfehler: ${err}`, "danger"));
+}
 
-    function getDirection() {
-      return document.querySelector('input[name="direction"]:checked').value;
-    }
+// Manuelle Eingabe
+function submitManualBarcode() {
+  const input = document.getElementById("manualBarcode");
+  const value = input.value.trim();
+  if (!value) return;
+  handleBarcode(value);
+  input.value = "";
+}
 
-    function handleBarcode(barcode) {
-      const direction = getDirection();
-      const data = { id: barcode, quantity: 1 };
+// --- prevent multiple scans ---
+const lastScanTimes = {};
+const scanCooldown = 2000; // 2 Sekunden
 
-      fetch(`/${direction}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(result => {
-        if (result.success) {
-          showToast(direction === "add" ? `✅ ${result.name} eingelagert` : `⚠ ${result.name} ausgelagert`);
-        } else {
-          showToast(`Fehler: ${result.error}`, "danger");
-        }
-      })
-      .catch(err => showToast(`Netzwerkfehler: ${err}`, "danger"));
-    }
+function onDetected(result) {
+  const code = result.codeResult.code;
+  if (!code) return;
+  const now = Date.now();
+  if (lastScanTimes[code] && (now - lastScanTimes[code] < scanCooldown)) return;
+  lastScanTimes[code] = now;
+  handleBarcode(code);
+}
 
-    // Manuelle Eingabe
-    function submitManualBarcode() {
-      const input = document.getElementById("manualBarcode");
-      const value = input.value.trim();
-      if (!value) return;
-      handleBarcode(value);
-      input.value = "";
-    }
+// Live-History
+function addToHistory(barcode, name, direction) {
+  const entry = document.createElement("div");
+  const time = new Date().toLocaleTimeString();
+  entry.textContent = `[${time}] ${direction === "add" ? "Einlagerung" : "Auslagerung"}: ${name} (${barcode})`;
+  historyDiv.prepend(entry);
+}
 
-    // --- prevent multiple scans ---
-    const recentScans = new Set();
-    const scanTimeout = 5000; // 5 Sekunden
-
-    function onScanSuccess(decodedText) {
-      if (recentScans.has(decodedText)) return;
-      recentScans.add(decodedText);
-
-      handleBarcode(decodedText);
-
-      setTimeout(() => recentScans.delete(decodedText), scanTimeout);
-    }
-
-    // Kamera starten
-    const html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 4/3 },
-      onScanSuccess
-    ).catch(err => console.log(err));
-  </script>
+// QuaggaJS starten
+Quagga.init({
+  inputStream : {
+    name : "Live",
+    type : "LiveStream",
+    target: document.querySelector('#scanner-container'),
+    constraints: { facingMode: "environment" },
+  },
+  decoder : { readers : ["ean_reader","code_128_reader","upc_reader","upc_e_reader","code_39_reader"] },
+  locate: true
+}, function(err) {
+    if (err) { console.log(err); return; }
+    Quagga.start();
+    Quagga.onDetected(onDetected);
+});
+</script>
 </body>
 </html>
